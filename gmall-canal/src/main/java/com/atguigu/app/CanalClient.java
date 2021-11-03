@@ -18,9 +18,9 @@ public class CanalClient {
         //1.获取连接器
         CanalConnector canalConnector = CanalConnectors.newSingleConnector(new InetSocketAddress("hadoop102", 11111), "example", "", "");
 
+        canalConnector.connect();
         while (true) {
             //2.获取连接
-            canalConnector.connect();
 
             //3.选择订阅的数据库
             canalConnector.subscribe("gmall21.*");
