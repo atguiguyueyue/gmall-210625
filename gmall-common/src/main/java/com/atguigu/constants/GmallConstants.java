@@ -14,6 +14,12 @@ public class GmallConstants {
     //预警需求ES索引前缀
     public static final String ES_ALERT_INDEX = "gmall_coupon_alert";
 
+    //订单明细主题
+    public static final String KAFKA_TOPIC_ORDER_DETAIL = "TOPIC_ORDER_DETAIL";
+
+    //用户表主题
+    public static final String KAFKA_TOPIC_USER = "TOPIC_USER_INFO";
+
 
 
 }

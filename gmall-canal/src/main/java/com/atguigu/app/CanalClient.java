@@ -12,15 +12,16 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.Random;
 
 public class CanalClient {
     public static void main(String[] args) throws InvalidProtocolBufferException {
         //1.获取连接器
         CanalConnector canalConnector = CanalConnectors.newSingleConnector(new InetSocketAddress("hadoop102", 11111), "example", "", "");
 
-        canalConnector.connect();
         while (true) {
             //2.获取连接
+            canalConnector.connect();
 
             //3.选择订阅的数据库
             canalConnector.subscribe("gmall21.*");
@@ -70,19 +71,35 @@ public class CanalClient {
     private static void handle(String tableName, CanalEntry.EventType eventType, List<CanalEntry.RowData> rowDatasList) {
         if ("order_info".equals(tableName)&&CanalEntry.EventType.INSERT.equals(eventType)){
             //获取每一行数据
-            for (CanalEntry.RowData rowData : rowDatasList) {
-                List<CanalEntry.Column> columnsList = rowData.getAfterColumnsList();
-                JSONObject jsonObject = new JSONObject();
-                //获取每一行的每一列数据
-                for (CanalEntry.Column column : columnsList) {
-                    jsonObject.put(column.getName(), column.getValue());
-                }
-                System.out.println(jsonObject.toJSONString());
-
-                //将数据发送至Kafka
-                MyKafkaSender.send(GmallConstants.KAFKA_TOPIC_ORDER, jsonObject.toJSONString());
-            }
+            saveToKafka(rowDatasList, GmallConstants.KAFKA_TOPIC_ORDER);
+        }else if ("order_detail".equals(tableName)&&CanalEntry.EventType.INSERT.equals(eventType)){
+//获取每一行数据
+            saveToKafka(rowDatasList, GmallConstants.KAFKA_TOPIC_ORDER_DETAIL);
+        }else if ("user_info".equals(tableName)&&(CanalEntry.EventType.INSERT.equals(eventType)||CanalEntry.EventType.UPDATE.equals(eventType))){
+            saveToKafka(rowDatasList, GmallConstants.KAFKA_TOPIC_USER);
         }
 
+    }
+
+    private static void saveToKafka(List<CanalEntry.RowData> rowDatasList, String kafkaTopicUser) {
+        for (CanalEntry.RowData rowData : rowDatasList) {
+            List<CanalEntry.Column> columnsList = rowData.getAfterColumnsList();
+            JSONObject jsonObject = new JSONObject();
+            //获取每一行的每一列数据
+            for (CanalEntry.Column column : columnsList) {
+                jsonObject.put(column.getName(), column.getValue());
+            }
+            System.out.println(jsonObject.toJSONString());
+
+            //模拟网络波动
+            try {
+                Thread.sleep(new Random().nextInt(5)*1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            //将数据发送至Kafka
+            MyKafkaSender.send(kafkaTopicUser, jsonObject.toJSONString());
+        }
     }
 }
