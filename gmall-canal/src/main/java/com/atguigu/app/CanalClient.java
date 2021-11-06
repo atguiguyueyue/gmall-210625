@@ -91,12 +91,12 @@ public class CanalClient {
             }
             System.out.println(jsonObject.toJSONString());
 
-            //模拟网络波动
+            /*//模拟网络波动
             try {
                 Thread.sleep(new Random().nextInt(5)*1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            }
+            }*/
 
             //将数据发送至Kafka
             MyKafkaSender.send(kafkaTopicUser, jsonObject.toJSONString());
